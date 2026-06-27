@@ -1,8 +1,9 @@
 'use client'
 
-import { useSearchParams, useRouter } from 'next/navigation'
 import { Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 
+// DESIGN.md: difficulty colors are semantic (not category palette), kept as-is
 const DIFFICULTIES = [
   {
     id: 'easy',
@@ -10,7 +11,7 @@ const DIFFICULTIES = [
     label_en: 'Easy',
     description: 'أسئلة بسيطة للجميع',
     emoji: '😊',
-    color: '#22c55e',
+    color: '#2D6A4F', // DESIGN.md color 1 (forest green) repurposed for easy
   },
   {
     id: 'medium',
@@ -18,7 +19,7 @@ const DIFFICULTIES = [
     label_en: 'Medium',
     description: 'تحدٍّ متوازن',
     emoji: '🤔',
-    color: '#f59e0b',
+    color: '#E85D04', // DESIGN.md color 5 (amber-orange) for medium
   },
   {
     id: 'hard',
@@ -26,7 +27,7 @@ const DIFFICULTIES = [
     label_en: 'Hard',
     description: 'للمتخصصين فقط',
     emoji: '🔥',
-    color: '#ef4444',
+    color: '#9D0208', // DESIGN.md color 8 (brick red) for hard
   },
 ] as const
 
@@ -43,66 +44,54 @@ function DifficultyContent() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-gray-950 px-4 py-12">
-      {/* Ambient glow */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed -top-40 -start-40 h-96 w-96 rounded-full opacity-20 blur-3xl"
-        style={{ backgroundColor: '#f59e0b' }}
-      />
+    // DESIGN.md: Primary gradient as page background on every screen
+    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#FB6B2C] to-[#C61E45] px-4 sm:px-8 py-12">
 
-      <header className="text-center mb-12">
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-3">
+      {/* DESIGN.md h2: text-3xl sm:text-4xl font-bold text-white */}
+      <header className="text-center mb-10">
+        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
           اختر مستوى الصعوبة
         </h1>
-        <p className="text-gray-400 text-lg">كلما زادت الصعوبة زاد التحدي!</p>
+        <p className="text-white/70 text-base font-medium">
+          كلما زادت الصعوبة زاد التحدي!
+        </p>
       </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full max-w-3xl">
+      {/* DESIGN.md tile style: rounded-2xl shadow-lg hover:scale-[1.03] active:scale-[0.97] */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 w-full max-w-3xl">
         {DIFFICULTIES.map((diff) => (
           <button
             key={diff.id}
             id={`difficulty-${diff.id}`}
             type="button"
             onClick={() => handleSelect(diff.id)}
-            className="flex flex-col items-center gap-4 p-8 rounded-2xl bg-white/5 border-2 border-transparent hover:border-white/20 hover:scale-[1.03] hover:bg-white/10 active:scale-[0.98] transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-            style={
-              {
-                '--accent': diff.color,
-              } as React.CSSProperties
-            }
-            onMouseEnter={(e) => {
-              ;(e.currentTarget as HTMLElement).style.borderColor = diff.color
-              ;(e.currentTarget as HTMLElement).style.boxShadow = `0 0 24px ${diff.color}44`
-            }}
-            onMouseLeave={(e) => {
-              ;(e.currentTarget as HTMLElement).style.borderColor = 'transparent'
-              ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
-            }}
+            className="flex flex-col items-center gap-4 p-8 rounded-2xl shadow-lg
+                       hover:scale-[1.03] active:scale-[0.97]
+                       transition-transform duration-150 ease-out cursor-pointer
+                       focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white focus-visible:ring-inset"
+            style={{ backgroundColor: diff.color }}
           >
-            <span
-              className="flex h-20 w-20 items-center justify-center rounded-2xl text-5xl"
-              style={{ backgroundColor: `${diff.color}22` }}
-              aria-hidden="true"
-            >
+            {/* Emoji badge */}
+            <span className="text-5xl leading-none" aria-hidden="true">
               {diff.emoji}
             </span>
             <div className="text-center">
+              {/* DESIGN.md h3: text-xl font-bold */}
               <p className="text-2xl font-extrabold text-white mb-1">
                 {diff.label_ar}
               </p>
-              <p className="text-sm text-gray-400">{diff.description}</p>
+              <p className="text-sm text-white/70">{diff.description}</p>
             </div>
           </button>
         ))}
       </div>
 
-      {/* Back */}
+      {/* Back — DESIGN.md body text on gradient */}
       <button
         id="back-to-categories"
         type="button"
         onClick={() => router.back()}
-        className="mt-10 text-gray-500 hover:text-gray-300 text-sm transition-colors"
+        className="mt-10 text-white/60 hover:text-white text-sm transition-colors"
       >
         → العودة لاختيار الفئات
       </button>

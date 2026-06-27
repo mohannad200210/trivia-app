@@ -8,33 +8,27 @@ import Link from 'next/link'
  */
 export default function PaywallPage() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-gray-950 px-6 text-center relative overflow-hidden">
-      {/* Ambient glow */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 flex items-center justify-center"
-      >
-        <div
-          className="h-[500px] w-[500px] rounded-full opacity-10 blur-3xl"
-          style={{ backgroundColor: '#f59e0b' }}
-        />
-      </div>
+    // DESIGN.md: Primary gradient on every screen
+    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#FB6B2C] to-[#C61E45] px-6 text-center">
 
-      <div className="relative z-10 flex flex-col items-center gap-6 max-w-md">
+      {/* DESIGN.md card: bg-white rounded-3xl p-6 sm:p-8 */}
+      <div className="bg-white rounded-3xl p-8 sm:p-10 flex flex-col items-center gap-6 max-w-md w-full shadow-lg">
+
         {/* Lock icon */}
         <div
           className="flex h-24 w-24 items-center justify-center rounded-3xl text-5xl"
-          style={{ backgroundColor: '#f59e0b22' }}
+          style={{ backgroundColor: '#FB6B2C22' }}
           aria-hidden="true"
         >
           🔒
         </div>
 
         <div className="flex flex-col gap-3">
-          <h1 className="text-4xl font-extrabold text-white">
+          {/* DESIGN.md h1 typography — dark text on white card */}
+          <h1 className="text-4xl font-extrabold text-gray-900">
             لعبت مجانك!
           </h1>
-          <p className="text-gray-400 text-lg leading-relaxed">
+          <p className="text-gray-500 text-base leading-relaxed">
             استمتعت بلعبتك المجانية.
             <br />
             الاشتراك لاستكمال اللعب — قريباً.
@@ -44,23 +38,26 @@ export default function PaywallPage() {
         {/* Coming soon badge */}
         <span
           className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold"
-          style={{ backgroundColor: '#f59e0b22', color: '#f59e0b' }}
+          style={{ backgroundColor: '#FB6B2C22', color: '#C61E45' }}
         >
           <span aria-hidden="true">⏳</span>
           قريباً — Coming Soon
         </span>
 
-        <p className="text-gray-600 text-sm">
+        <p className="text-gray-400 text-sm">
           سيتم دعم KNET والبطاقات الائتمانية
         </p>
 
-        {/* Back to home */}
+        {/* DESIGN.md chunky button */}
         <Link
           id="paywall-back-home"
           href="/"
-          className="mt-4 rounded-xl px-7 py-3 font-bold text-base bg-white/10 text-white hover:bg-white/20 transition-colors"
+          className="w-full rounded-full bg-[#C61E45] text-white text-lg font-bold px-7 py-4 text-center
+                     shadow-[0_6px_0_0_rgba(0,0,0,0.25)] transition-all duration-100
+                     hover:brightness-110
+                     active:translate-y-[6px] active:shadow-[0_0px_0_0_rgba(0,0,0,0.25)]"
         >
-          → العودة للرئيسية
+          العودة للرئيسية
         </Link>
       </div>
     </main>

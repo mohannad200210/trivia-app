@@ -113,25 +113,20 @@ function TeamsContent() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col bg-gray-950 relative overflow-hidden">
-      {/* Ambient glow */}
+    <main className="min-h-screen flex flex-col bg-gradient-to-br from-[#FB6B2C] to-[#C61E45] relative overflow-hidden">
+      {/* Gradient overlay — subtle depth on top of page gradient */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-40 -end-40 h-96 w-96 rounded-full opacity-20 blur-3xl"
-        style={{ backgroundColor: '#3b82f6' }}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-40 -start-40 h-96 w-96 rounded-full opacity-15 blur-3xl"
-        style={{ backgroundColor: '#ec4899' }}
+        className="pointer-events-none absolute inset-0 bg-black/10"
       />
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <header className="relative z-10 pt-10 pb-4 text-center px-4">
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-2">
+        {/* DESIGN.md h2: text-3xl sm:text-4xl font-bold text-white */}
+        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
           إعداد الفرق
         </h1>
-        <p className="text-gray-400 text-base">
+        <p className="text-white/70 text-base font-medium">
           أضف من{' '}
           <span className="text-white font-bold">{MIN_TEAMS}</span>
           {' '}إلى{' '}
@@ -181,14 +176,14 @@ function TeamsContent() {
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────────────────── */}
-      <footer className="relative z-10 sticky bottom-0 bg-gray-950/80 backdrop-blur-md border-t border-white/10 px-4 sm:px-8 py-5">
+      <footer className="relative z-10 sticky bottom-0 bg-black/30 backdrop-blur-md border-t border-white/20 px-4 sm:px-8 py-5">
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
           <button
             id="back-to-difficulty"
             type="button"
             onClick={() => router.back()}
             disabled={starting}
-            className="text-gray-500 hover:text-gray-300 text-sm transition-colors disabled:opacity-40"
+            className="text-white/50 hover:text-white text-sm transition-colors disabled:opacity-40"
           >
             → العودة
           </button>
@@ -204,11 +199,12 @@ function TeamsContent() {
             type="button"
             onClick={handleStart}
             disabled={!allNamed || starting}
+            // DESIGN.md chunky button: rounded-full bg-white shadow-[0_6px_0_0_rgba(0,0,0,0.25)]
             className={[
-              'flex items-center gap-2 rounded-xl px-7 py-3 font-bold text-base transition-all duration-200',
+              'flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold transition-all duration-100',
               allNamed && !starting
-                ? 'bg-violet-600 hover:bg-violet-500 active:scale-95 text-white shadow-lg shadow-violet-900/50'
-                : 'bg-white/10 text-gray-500 cursor-not-allowed',
+                ? 'bg-white text-[#C61E45] shadow-[0_6px_0_0_rgba(0,0,0,0.25)] active:translate-y-[6px] active:shadow-none hover:brightness-95'
+                : 'bg-white/30 text-white/50 cursor-not-allowed',
             ].join(' ')}
           >
             {starting ? (

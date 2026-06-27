@@ -144,12 +144,12 @@ function PlayContent() {
   // ── Loading state ───────────────────────────────────────────────────────────
   if (questionsLoading) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center bg-gray-950 gap-6">
+      <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#FB6B2C] to-[#C61E45] gap-6">
         <span
-          className="h-12 w-12 rounded-full border-4 border-white/10 border-t-violet-500 animate-spin"
+          className="h-12 w-12 rounded-full border-4 border-white/30 border-t-white animate-spin"
           aria-hidden="true"
         />
-        <p className="text-gray-400 font-medium">جارٍ تحميل الأسئلة…</p>
+        <p className="text-white/80 font-medium">جارٍ تحميل الأسئلة…</p>
       </main>
     )
   }
@@ -157,18 +157,21 @@ function PlayContent() {
   // ── Error / empty state ─────────────────────────────────────────────────────
   if (questionsError || !currentQuestion) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center bg-gray-950 text-center p-8 gap-4">
-        <span className="text-4xl" aria-hidden="true">😕</span>
+      <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#FB6B2C] to-[#C61E45] text-center p-8 gap-4">
+        <span className="text-5xl" aria-hidden="true">😕</span>
         <p className="text-2xl font-bold text-white">
           {questionsError ? 'تعذّر تحميل الأسئلة' : 'لا توجد أسئلة لهذا الاختيار'}
         </p>
         {questionsError && (
-          <p className="text-gray-500 text-sm">{questionsError}</p>
+          <p className="text-white/60 text-sm">{questionsError}</p>
         )}
+        {/* DESIGN.md chunky button */}
         <button
           type="button"
           onClick={() => router.push('/')}
-          className="rounded-xl bg-violet-600 px-6 py-3 font-bold text-white hover:bg-violet-500 transition-colors"
+          className="rounded-full bg-white text-[#C61E45] font-bold px-8 py-4 text-lg
+                     shadow-[0_6px_0_0_rgba(0,0,0,0.25)] transition-all duration-100
+                     active:translate-y-[6px] active:shadow-none hover:brightness-95"
         >
           العودة للرئيسية
         </button>
@@ -178,24 +181,20 @@ function PlayContent() {
 
   // ── Main game screen ────────────────────────────────────────────────────────
   return (
-    <main className="min-h-screen flex flex-col bg-gray-950 relative overflow-hidden">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-60 -start-60 h-[500px] w-[500px] rounded-full opacity-10 blur-3xl"
-        style={{ backgroundColor: '#6366f1' }}
-      />
+    <main className="min-h-screen flex flex-col bg-gradient-to-br from-[#FB6B2C] to-[#C61E45] relative overflow-hidden">
 
-      {/* Top bar */}
       <header className="relative z-10 flex items-center justify-between px-4 sm:px-8 pt-6 pb-2">
-        <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-gray-400 uppercase tracking-wide">
+        {/* Difficulty badge on gradient */}
+        <span className="rounded-full bg-black/30 px-3 py-1 text-xs font-bold text-white/80 uppercase tracking-wide">
           {{ easy: 'سهل', medium: 'متوسط', hard: 'صعب' }[difficulty]}
         </span>
 
+        {/* End game button */}
         <button
           id="end-game"
           type="button"
           onClick={handleEndGame}
-          className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold text-gray-400 hover:text-white hover:bg-white/20 transition-all"
+          className="rounded-full bg-black/30 px-4 py-2 text-sm font-bold text-white/70 hover:text-white hover:bg-black/50 transition-all"
         >
           إنهاء اللعبة ✕
         </button>
@@ -215,7 +214,7 @@ function PlayContent() {
       </section>
 
       {/* Score strip */}
-      <footer className="relative z-10 sticky bottom-0 bg-gray-950/90 backdrop-blur-md border-t border-white/10 px-4 sm:px-8 py-5">
+      <footer className="relative z-10 sticky bottom-0 bg-black/30 backdrop-blur-md border-t border-white/20 px-4 sm:px-8 py-5">
         <div className="max-w-4xl mx-auto">
           <ScoreStrip
             teams={teams}

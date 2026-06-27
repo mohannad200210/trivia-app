@@ -200,3 +200,69 @@ Do not build, even if it seems natural to add: user accounts/auth, real
 payment processing, an admin dashboard, live multiplayer/network play,
 or native mobile wrappers — these are explicitly Phase 2+ and only start
 when the user asks for them by name.
+## 11. Helper Tools (Lifelines)
+
+Each team gets exactly 3 helper tools, usable once each per game (matches
+the genre convention from Gulf trivia games — this is a generic game
+mechanic, not copied code/assets from any specific app):
+
+1. **حذف خيارين (Remove two)** — removes 2 of the 4 incorrect choices from
+   the current question display, before the team answers out loud.
+2. **مضاعفة النقاط (Double points)** — if the team answers this question
+   correctly, they get 2 points instead of 1. Must be activated BEFORE the
+   host reveals/awards the answer.
+3. **تخطي السؤال (Skip)** — skips the current question with no point
+   awarded to anyone, advances to the next question, does not count as a
+   "miss."
+
+### Data model addition
+
+```sql
+-- add to teams table
+alter table teams add column helpers_used jsonb default '{"remove_two": false, "double_points": false, "skip": false}';
+```
+
+### UI placement
+
+On `/play`, add a small row of 3 icon buttons above each team's entry in
+the `ScoreStrip` (or, if space is tight with 6 teams, a "هل تريد استخدام
+مساعدة؟" expandable row that appears when a team is selected to answer).
+Use the chunky button style from DESIGN.md for these. Once used, a helper
+icon greys out and becomes disabled for the rest of the game.
+
+### Logic placement
+
+Put helper-tool state transitions in `lib/game-logic.ts` alongside the
+existing scoring functions — e.g. `useHelper(teamId, helperType)`,
+`isHelperAvailable(team, helperType)`. Don't inline this logic in
+components.
+
+## 12. Main page structure (landing, `/`)
+
+Match this structure (original visuals per DESIGN.md, this is layout/
+function only):
+
+1. **Hero section** — full-bleed gradient background, large centered
+   app title placeholder + tagline, one big chunky CTA button
+   "ابدأ اللعبة 🎮" → leads to category picker.
+2. **How it works** — 3-step horizontal strip (icon + short label each):
+   "اختار الفئات" (pick categories) → "كوّن فريقك" (form your team) →
+   "ابدأ التحدي" (start the challenge).
+3. **Category teaser grid** — preview of all 8 categories as tiles (not
+   yet selectable here — this is marketing/preview only, real selection
+   happens on the next screen). Purely visual, builds anticipation.
+4. Simple footer, no need to replicate competitor footer content/links.
+
+## 13. Game dashboard structure (`/play`)
+
+This is the in-game "control panel" the host uses:
+
+1. **Top bar**: question counter ("السؤال ٣ / ١٠"), progress bar, "إنهاء
+   اللعبة" button (top-left in RTL).
+2. **Center**: question card (white, rounded-3xl per DESIGN.md) with the
+   4 colored choice tiles below it.
+3. **Helper tools row**: per Section 11 above, shown contextually.
+4. **Bottom team strip**: each team as a chunky button (per DESIGN.md)
+   showing color + name + score; tapping awards the point and advances.
+   "لا أحد" ghost button to skip without scoring.
+
