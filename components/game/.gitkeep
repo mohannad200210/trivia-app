@@ -1,0 +1,7 @@
+// components/game — game-specific presentational components
+// Examples to create in Phase 1:
+//   CategoryCard.tsx    — tappable tile with icon + Arabic/English name
+//   QuestionCard.tsx    — big text question for /play (min 32px per SKILL.md §6)
+//   ScoreBoard.tsx      — running score strip for 2–6 teams
+//   TeamAvatar.tsx      — team name + colour chip; host taps to award a point
+// Keep components presentational — all logic goes in /lib (SKILL.md §3).

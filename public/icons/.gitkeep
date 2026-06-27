@@ -1,0 +1,3 @@
+Place category icon SVGs or PNGs here.
+Naming convention: category-{slug}.svg (e.g. category-geography.svg).
+Referenced via /icons/filename in the browser.

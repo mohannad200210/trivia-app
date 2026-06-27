@@ -1,0 +1,2 @@
+Place sound effect files here (e.g. correct.mp3, wrong.mp3, tick.mp3).
+Referenced via /sounds/filename.mp3 in the browser.

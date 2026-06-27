@@ -1,0 +1,7 @@
+// components/ui — generic, reusable UI primitives
+// Examples to create in Phase 1:
+//   Button.tsx    — primary/secondary variants; use logical padding (ps-/pe-)
+//   Modal.tsx     — slides in from the right (RTL) per SKILL.md §6 RTL QA checklist
+//   Input.tsx     — RTL-aware text input
+//   Toast.tsx     — notification from the correct (right) side
+// Use Tailwind logical properties throughout — never pl-/pr-/text-left/text-right.

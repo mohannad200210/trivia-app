@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Global base styles.
+  All colour/spacing tokens should be declared here or in tailwind.config.ts.
+  Component-level styles go in the component file via Tailwind classes — no
+  CSS modules, no styled-components (SKILL.md §2).
+*/
+
+@layer utilities {
+  /* bg-white/8 — Tailwind only generates /5 and /10 by default */
+  .hover\:bg-white\/8:hover {
+    background-color: rgb(255 255 255 / 0.08);
+  }
+}
+
+@layer base {
+  :root {
+    /* Design tokens — brand palette */
+    --color-brand-primary: 258 90% 66%;   /* violet */
+    --color-brand-accent:  39 100% 57%;   /* amber  */
+  }
+
+  * {
+    /* RTL-safe box-sizing */
+    box-sizing: border-box;
+  }
+
+  body {
+    /* Ensure Arabic text renders at correct baseline */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
