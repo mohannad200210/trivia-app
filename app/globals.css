@@ -23,6 +23,16 @@
     --gradient-to:   #C61E45;  /* deep crimson */
     --surface-card:  #FFFFFF;  /* question cards, team setup cards */
     --surface-card-muted: #FFF4ED; /* subtle cream for secondary panels */
+
+    /* Gameplay (dark) theme tokens (DESIGN.md ADDENDUM) — used on
+       /board, /question, /answer, /results. Tailwind arbitrary values
+       reference these as e.g. bg-[--game-bg] / bg-[--game-surface]. */
+    --game-bg:           #1A1A1E;  /* near-black background */
+    --game-surface:      #2A2A30;  /* cell backgrounds, panels */
+    --game-accent:       #FF7A1A;  /* orange — primary buttons, turn pill */
+    --game-accent-muted: #4A4A52;  /* disabled/used cell background */
+    --game-text:         #FFFFFF;
+    --game-text-muted:   #9A9AA2;  /* secondary labels */
   }
 
   * {

@@ -1,15 +1,23 @@
 /**
- * categories.ts — Hard-coded category list for Phase 1 (pre-Supabase).
- * Swap the data source to a Supabase query in Phase 1 once the project URL is set.
- * Colours and emojis are intentionally varied per SKILL.md §7 (no single brand colour).
+ * categories.ts — Visual category config + DB fetch.
+ *
+ * LOCAL_CATEGORIES is the visual source of truth (emoji + tile color from
+ * DESIGN.md). The categories table in Supabase is the canonical id source;
+ * fetchCategories() returns DB rows, and callers match by name_en to attach
+ * the local visual metadata. This way design tokens stay in code (no need
+ * to store colors in the DB) while game_cells FKs still reference real UUIDs.
  */
 
+import { supabase } from './supabase'
+import type { Category } from './types'
+
 export interface LocalCategory {
+  /** Stable slug — NOT a UUID. Used as a React key and to look up visual meta. */
   id: string
   name_ar: string
   name_en: string
   emoji: string
-  /** Hex accent colour — unique per category */
+  /** Hex accent colour — unique per category, exact value from DESIGN.md */
   color: string
 }
 
@@ -25,8 +33,35 @@ export const LOCAL_CATEGORIES: LocalCategory[] = [
   { id: 'art',      name_ar: 'فن وموسيقى',      name_en: 'Art & Music',       emoji: '🎵', color: '#9D0208' },
 ]
 
-/** Lookup by name_en — used by the categories page to map Supabase rows to visuals. */
+/** Visual metadata keyed by name_en — used to attach emoji/color to DB rows. */
 export const CATEGORY_META: Record<string, { emoji: string; color: string }> =
   Object.fromEntries(
     LOCAL_CATEGORIES.map((c) => [c.name_en, { emoji: c.emoji, color: c.color }])
   )
+
+/** A DB category row decorated with its visual meta. */
+export interface CategoryWithMeta extends Category {
+  emoji: string
+  color: string
+}
+
+/** Fetch all categories from the DB, in display order, with visual meta attached. */
+export async function fetchCategories(): Promise<CategoryWithMeta[]> {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('id, name_ar, name_en, icon_url, sort_order')
+    .order('sort_order', { ascending: true })
+
+  if (error) {
+    throw new Error(`fetchCategories failed: ${error.message}`)
+  }
+
+  return (data ?? []).map((row) => {
+    const meta = CATEGORY_META[row.name_en]
+    return {
+      ...row,
+      emoji: meta?.emoji ?? '❓',
+      color: meta?.color ?? '#4A4A52',
+    }
+  })
+}

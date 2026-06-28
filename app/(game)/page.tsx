@@ -59,7 +59,7 @@ export default function LandingPage() {
         */}
         <Link
           id="hero-cta"
-          href="/categories"
+          href="/create-game"
           className="inline-flex items-center gap-3 rounded-full bg-white px-10 py-4
                      text-[#C61E45] text-lg font-bold
                      shadow-[0_6px_0_0_rgba(0,0,0,0.25)]
@@ -182,7 +182,7 @@ export default function LandingPage() {
           {/* Inline CTA under the grid */}
           <div className="flex justify-center pt-4">
             <Link
-              href="/categories"
+              href="/create-game"
               className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3
                          text-[#C61E45] text-base font-bold
                          shadow-[0_6px_0_0_rgba(0,0,0,0.25)]

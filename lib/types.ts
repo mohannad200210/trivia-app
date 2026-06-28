@@ -1,11 +1,19 @@
 /**
  * types.ts — Shared TypeScript types for the trivia app.
  *
- * These mirror the Supabase data model defined in SKILL.md §4 exactly.
+ * These mirror the Supabase data model in /SKILL.md §4 exactly.
  * Do NOT drift from the SQL schema without updating both.
  *
- * No `any` types — strict mode is on (SKILL.md §9).
+ * No `any` types — strict mode is on (SKILL.md §10).
  */
+
+// ─── Enums (mirror DB CHECK constraints) ───────────────────────────────────
+
+export type PointValue = 200 | 400 | 600
+
+export type GameStatus = 'setup' | 'active' | 'finished'
+
+export type SlotIndex = 1 | 2
 
 // ─── Database row types ────────────────────────────────────────────────────
 
@@ -17,20 +25,12 @@ export interface Category {
   sort_order: number
 }
 
-export interface Choice {
-  id: string
-  text_ar: string
-  text_en: string
-}
-
 export interface Question {
   id: string
   category_id: string
-  difficulty: 'easy' | 'medium' | 'hard'
+  point_value: PointValue
   question_text_ar: string
-  question_text_en: string | null
-  choices: Choice[] // jsonb — exactly 4 items
-  correct_choice_id: string
+  answer_text_ar: string
   media_url: string | null
   is_active: boolean
 }
@@ -39,10 +39,9 @@ export interface Game {
   id: string
   created_at: string
   host_session_id: string
-  status: 'setup' | 'active' | 'finished'
-  selected_category_ids: string[] // jsonb
-  difficulty: 'easy' | 'medium' | 'hard' | null
-  is_free_game: boolean
+  status: GameStatus
+  selected_category_ids: string[] // jsonb, exactly 6 ids
+  current_turn_team_id: string | null
 }
 
 export interface Team {
@@ -51,33 +50,65 @@ export interface Team {
   name: string
   color: string
   score: number
-  helpers_used: HelpersUsed
+  /** 1 = first team (entered first), 2 = second team. Nullable for old rows. */
+  display_order: number | null
 }
 
-export interface GameQuestion {
+export interface GameCell {
   id: string
   game_id: string
+  category_id: string
+  point_value: PointValue
+  slot_index: SlotIndex
   question_id: string
-  order_index: number
+  is_answered: boolean
   answered_by_team_id: string | null
 }
 
-// ─── Helper tools (SKILL.md §11) ────────────────────────────────────────────
+// ─── Joined shapes used by the /board page ─────────────────────────────────
 
-export interface HelpersUsed {
-  remove_two: boolean
-  double_points: boolean
-  skip: boolean
-}
-
-export type HelperType = keyof HelpersUsed
-
-// ─── UI / client-side types ────────────────────────────────────────────────
-
-/** Active game state held in React context during a session. */
-export interface GameSession {
+/** Full payload the /board page needs to render. */
+export interface BoardData {
   game: Game
   teams: Team[]
-  questions: Question[]
-  currentQuestionIndex: number
+  cells: GameCell[]
+  categories: Category[]
+}
+
+// ─── /create-game RPC payload ──────────────────────────────────────────────
+
+/** Parameters for the create_board_game RPC. */
+export interface CreateBoardGameParams {
+  hostSessionId: string
+  selectedCategoryIds: string[]
+  team1Name: string
+  team1Color: string
+  team2Name: string
+  team2Color: string
+}
+
+// ─── /question + /answer payloads ──────────────────────────────────────────
+
+/** Full payload the /question page needs. */
+export interface QuestionData {
+  game: Game
+  teams: Team[]
+  cell: GameCell
+  question: Question
+  category: Category
+}
+
+/** Full payload the /answer page needs. */
+export interface AnswerData {
+  game: Game
+  teams: Team[]
+  cell: GameCell
+  question: Question
+}
+
+/** Parameters for the resolve_answer RPC. */
+export interface ResolveAnswerParams {
+  cellId: string
+  /** Pass null for "لا أحد" (no team awarded). */
+  awardedTeamId: string | null
 }
