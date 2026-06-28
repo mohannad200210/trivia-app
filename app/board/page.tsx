@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { fetchBoardData } from '@/lib/board'
+import { finishGame } from '@/lib/finish-game'
 import type { BoardData, GameCell, PointValue, SlotIndex } from '@/lib/types'
 import { TopBar } from '@/components/game/TopBar'
 
@@ -63,9 +64,20 @@ function BoardInner() {
     setData(null)
     setError(null)
     fetchBoardData(gameId)
-      .then(setData)
+      .then((d) => {
+        setData(d)
+        // Auto-finish: if all 36 cells are answered, end the game and
+        // route to /results. Runs after every return from /answer (the
+        // _t refreshKey triggers a re-fetch). The UPDATE is best-effort:
+        // if it fails we still navigate, since /results works regardless
+        // of status.
+        if (d.cells.length === 36 && d.cells.every((c) => c.is_answered)) {
+          finishGame(gameId).catch(() => {})
+          router.push(`/results?gameId=${gameId}`)
+        }
+      })
       .catch((e) => setError(e instanceof Error ? e.message : 'فشل تحميل اللوحة'))
-  }, [gameId, refreshKey])
+  }, [gameId, refreshKey, router])
 
   // Pre-compute cell lookups once data is loaded.
   const { categoryNames, cellLookup, currentTeam } = useMemo(() => {
@@ -123,38 +135,46 @@ function BoardInner() {
     router.push(`/question?gameId=${gameId}&cellId=${cell.id}`)
   }
 
-  return (
-    // Gameplay (dark) theme per DESIGN.md ADDENDUM
-    <main className="min-h-screen bg-[--game-bg] text-[--game-text]">
-      <TopBar game={game} teams={teams} />
+  // "انتهاء اللعبة" — mark finished, then navigate. UPDATE is
+  // best-effort; /results reads the game regardless of status.
+  const handleEndGame = () => {
+    if (!gameId) return
+    finishGame(gameId).catch(() => {})
+    router.push(`/results?gameId=${gameId}`)
+  }
 
-      {/* ── Score bar — always visible, current team highlighted */}
-      <div className="px-4 py-3 flex gap-3">
+  return (
+    // Gameplay (dark) theme per DESIGN.md ADDENDUM. h-screen + flex-col +
+    // flex-1 on the grid container is what lets the 6×6 grid fit the
+    // viewport without vertical scroll: the chrome (top bar + score bar +
+    // progress hint) takes its natural height, and the grid stretches
+    // to fill the remainder. min-h-0 on the flex child is required so
+    // the grid can shrink below its intrinsic content height.
+    <main className="h-screen bg-[--game-bg] text-[--game-text] flex flex-col overflow-hidden">
+      <TopBar game={game} teams={teams} onEndGame={handleEndGame} />
+
+      {/* ── Compact score bar — flex-shrink-0 so it stays at its natural height */}
+      <div className="px-3 sm:px-4 py-2 flex gap-2 flex-shrink-0">
         {teams.map((team) => {
           const isCurrent = team.id === game.current_turn_team_id
           return (
             <div
               key={team.id}
               className={[
-                'flex-1 rounded-2xl p-3 sm:p-4 flex items-center gap-3',
+                'flex-1 rounded-xl px-3 py-2 flex items-center gap-2',
                 'bg-[--game-surface]',
                 isCurrent ? 'ring-2 ring-[--game-accent]' : '',
               ].join(' ')}
             >
               <span
                 aria-hidden="true"
-                className="w-8 h-8 rounded-full flex-shrink-0"
+                className="w-7 h-7 rounded-full flex-shrink-0"
                 style={{ backgroundColor: team.color }}
               />
-              <div className="flex flex-col min-w-0">
-                <span className="font-bold text-white truncate">{team.name}</span>
-                {isCurrent && (
-                  <span className="text-xs text-[--game-accent] font-medium">
-                    يلعب الآن
-                  </span>
-                )}
-              </div>
-              <span className="ms-auto text-2xl font-extrabold text-white tabular-nums">
+              <span className="text-sm sm:text-base font-bold text-white truncate flex-1 min-w-0">
+                {team.name}
+              </span>
+              <span className="text-xl sm:text-2xl font-extrabold text-white tabular-nums">
                 {team.score}
               </span>
             </div>
@@ -162,27 +182,32 @@ function BoardInner() {
         })}
       </div>
 
-      {/* ── Progress hint ──────────────────────────────────────────── */}
-      <p className="px-4 text-xs text-[--game-text-muted] text-center">
-        {unansweredCount} خلية متبقية من 36
+      {/* ── Progress hint — single tight line */}
+      <p className="px-3 sm:px-4 pb-1 text-[10px] text-[--game-text-muted] flex-shrink-0">
+        {unansweredCount} / 36 خلية متبقية
       </p>
 
-      {/* ── Board grid — 6 columns × 6 value rows + 1 header row */}
-      <div className="px-3 sm:px-4 py-3">
-        <div className="grid grid-cols-6 gap-2 sm:gap-3">
-          {/* Category header row */}
+      {/* ── Board grid — fills remaining height, scrolls horizontally if narrow */}
+      <div className="flex-1 min-h-0 px-3 sm:px-4 pb-3 sm:pb-4 overflow-x-auto">
+        <div
+          className="grid h-full min-w-[36rem] grid-cols-6
+                     grid-rows-[auto_repeat(6,minmax(0,1fr))] gap-2"
+        >
+          {/* Category header row — auto-height so the pill sits tight above
+              its column (only the gap-2 below it separates from row 1) */}
           {game.selected_category_ids.map((catId) => (
             <div
               key={`hdr-${catId}`}
-              className="bg-[--game-accent] rounded-full px-1 sm:px-2 py-1 text-center min-h-[2.25rem] flex items-center justify-center"
+              className="bg-[--game-accent] rounded-full px-1 sm:px-2 flex items-center justify-center"
             >
-              <span className="text-[10px] sm:text-sm font-bold text-white leading-tight line-clamp-2">
+              <span className="text-[10px] sm:text-xs font-bold text-white leading-tight truncate">
                 {categoryNames.get(catId) ?? '—'}
               </span>
             </div>
           ))}
 
-          {/* 6 value rows */}
+          {/* 6 value rows. Each cell is a flat compact tile sized by the
+              1fr row, not aspect-square, so the row's height drives the cell. */}
           {VALUE_ROWS.map(({ value, slot }, rowIdx) => (
             <FragmentCells key={`row-${rowIdx}`}>
               {game.selected_category_ids.map((catId) => {
@@ -192,7 +217,7 @@ function BoardInner() {
                   return (
                     <div
                       key={`missing-${catId}-${rowIdx}`}
-                      className="aspect-square rounded-2xl bg-[--game-accent-muted] opacity-30"
+                      className="rounded-md bg-[--game-accent-muted] opacity-30"
                     />
                   )
                 }
@@ -208,8 +233,8 @@ function BoardInner() {
                         : `${value} نقطة`
                     }
                     className={[
-                      'aspect-square rounded-2xl flex items-center justify-center',
-                      'text-2xl sm:text-3xl font-extrabold text-white tabular-nums',
+                      'rounded-md flex items-center justify-center',
+                      'text-lg sm:text-xl font-extrabold text-white tabular-nums',
                       'transition-transform duration-150 ease-out',
                       cell.is_answered
                         ? 'bg-[--game-accent-muted] opacity-40 cursor-not-allowed'

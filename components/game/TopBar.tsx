@@ -21,6 +21,13 @@ interface TopBarProps {
   showBackToBoard?: boolean
   /** When true, disables end-game (e.g. while an RPC is in flight). */
   endGameDisabled?: boolean
+  /**
+   * Handler for the "انتهاء اللعبة" button. Should mark the game as
+   * finished and then navigate to /results. If not provided, the
+   * button falls back to a plain router.push('/results') — fine for
+   * read-only screens, wrong for in-progress game screens.
+   */
+  onEndGame?: () => void
 }
 
 export function TopBar({
@@ -28,6 +35,7 @@ export function TopBar({
   teams,
   showBackToBoard = false,
   endGameDisabled = false,
+  onEndGame,
 }: TopBarProps) {
   const router = useRouter()
 
@@ -64,7 +72,7 @@ export function TopBar({
       <div className="flex items-center gap-2 sm:gap-3">
         <button
           type="button"
-          onClick={() => router.push('/results')}
+          onClick={onEndGame ?? (() => router.push('/results'))}
           disabled={endGameDisabled}
           className="rounded-full bg-white/10 hover:bg-white/15 disabled:opacity-50 disabled:cursor-not-allowed px-3 sm:px-4 py-2 text-sm font-bold text-white transition-colors"
         >

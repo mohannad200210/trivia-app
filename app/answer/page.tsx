@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { fetchAnswerData } from '@/lib/play'
 import { resolveAnswer } from '@/lib/resolve-answer'
+import { finishGame } from '@/lib/finish-game'
 import type { AnswerData } from '@/lib/types'
 import { TopBar } from '@/components/game/TopBar'
 import { AnswerPanel } from '@/components/game/AnswerPanel'
@@ -102,9 +103,15 @@ function AnswerInner() {
     }
   }
 
+  const handleEndGame = () => {
+    if (!gameId) return
+    finishGame(gameId).catch(() => {})
+    router.push(`/results?gameId=${gameId}`)
+  }
+
   return (
     <main className="min-h-screen bg-[--game-bg] text-[--game-text] flex flex-col">
-      <TopBar game={game} teams={teams} showBackToBoard endGameDisabled={submitting} />
+      <TopBar game={game} teams={teams} showBackToBoard endGameDisabled={submitting} onEndGame={handleEndGame} />
 
       <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8">
         <div className="max-w-3xl mx-auto space-y-6">

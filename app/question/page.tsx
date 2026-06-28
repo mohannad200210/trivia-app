@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { fetchQuestionData } from '@/lib/play'
+import { finishGame } from '@/lib/finish-game'
 import type { QuestionData } from '@/lib/types'
 import { TopBar } from '@/components/game/TopBar'
 import { QuestionPanel } from '@/components/game/QuestionPanel'
@@ -77,9 +78,15 @@ function QuestionInner() {
     router.push(`/answer?gameId=${gameId}&cellId=${cellId}`)
   }
 
+  const handleEndGame = () => {
+    if (!gameId) return
+    finishGame(gameId).catch(() => {})
+    router.push(`/results?gameId=${gameId}`)
+  }
+
   return (
     <main className="min-h-screen bg-[--game-bg] text-[--game-text] flex flex-col">
-      <TopBar game={game} teams={teams} showBackToBoard />
+      <TopBar game={game} teams={teams} showBackToBoard onEndGame={handleEndGame} />
 
       <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8">
         <div className="max-w-3xl mx-auto space-y-8 flex flex-col">

@@ -112,3 +112,11 @@ export interface ResolveAnswerParams {
   /** Pass null for "لا أحد" (no team awarded). */
   awardedTeamId: string | null
 }
+
+// ─── /results payload ──────────────────────────────────────────────────────
+
+/** Full payload the /results page needs. */
+export interface ResultsData {
+  game: Game
+  teams: Team[]
+}
