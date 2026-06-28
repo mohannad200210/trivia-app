@@ -4,19 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import CategoryCard from '@/components/game/CategoryCard'
 import { supabase } from '@/lib/supabase'
-import type { LocalCategory } from '@/lib/categories'
-
-// ── DESIGN.md category tile colors (exact, in sort_order 1-8) ─────────────────
-const CATEGORY_META: Record<string, { emoji: string; color: string }> = {
-  'General Knowledge': { emoji: '🧠', color: '#2D6A4F' },
-  'Geography':         { emoji: '🌍', color: '#1B4965' },
-  'Sports':            { emoji: '⚽', color: '#7B2D8E' },
-  'Movies & TV':       { emoji: '🎬', color: '#B5179E' },
-  'History':           { emoji: '📜', color: '#E85D04' },
-  'Science':           { emoji: '🔬', color: '#3A86FF' },
-  'Gaming':            { emoji: '🎮', color: '#6A994E' },
-  'Art & Music':       { emoji: '🎵', color: '#9D0208' },
-}
+import { CATEGORY_META, type LocalCategory } from '@/lib/categories'
 
 const MAX_CATEGORIES = 6
 

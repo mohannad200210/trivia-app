@@ -10,16 +10,27 @@ const CHOICE_LABELS: Record<string, string> = {
   d: 'د',
 }
 
+// DESIGN.md: choice tile colors — always in this fixed أ/ب/ج/د order
+const CHOICE_COLORS: Record<string, string> = {
+  a: '#3A86FF', // blue
+  b: '#E85D04', // amber
+  c: '#2D6A4F', // green
+  d: '#B5179E', // magenta
+}
+
 interface QuestionCardProps {
   question: Question
   questionNumber: number
   totalQuestions: number
+  /** Choice IDs to hide (SKILL.md §11 — remove_two helper). */
+  hiddenChoiceIds?: string[]
 }
 
 export default function QuestionCard({
   question,
   questionNumber,
   totalQuestions,
+  hiddenChoiceIds = [],
 }: QuestionCardProps) {
   const progress = (questionNumber / totalQuestions) * 100
 
@@ -68,25 +79,31 @@ export default function QuestionCard({
         role="list"
         aria-label="الخيارات"
       >
-        {question.choices.map((choice) => (
-          <div
-            key={choice.id}
-            role="listitem"
-            className="flex items-center gap-3 rounded-2xl bg-white/5 border border-white/10 px-4 py-5 sm:px-6 sm:py-6"
-          >
-            {/* Letter badge */}
-            <span
-              className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-xl text-lg font-extrabold bg-violet-600/30 text-violet-300"
-              aria-hidden="true"
+        {question.choices
+          .filter((choice) => !hiddenChoiceIds.includes(choice.id))
+          .map((choice) => {
+          const bgColor = CHOICE_COLORS[choice.id] ?? '#3A86FF'
+          return (
+            <div
+              key={choice.id}
+              role="listitem"
+              className="flex items-center gap-3 rounded-2xl px-4 py-5 sm:px-6 sm:py-6"
+              style={{ backgroundColor: bgColor }}
             >
-              {CHOICE_LABELS[choice.id] ?? choice.id}
-            </span>
-            {/* Choice text */}
-            <span className="text-start text-lg sm:text-xl font-bold text-white leading-snug">
-              {choice.text_ar}
-            </span>
-          </div>
-        ))}
+              {/* Letter badge */}
+              <span
+                className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-xl text-lg font-extrabold bg-white/20 text-white"
+                aria-hidden="true"
+              >
+                {CHOICE_LABELS[choice.id] ?? choice.id}
+              </span>
+              {/* Choice text */}
+              <span className="text-start text-lg sm:text-xl font-bold text-white leading-snug">
+                {choice.text_ar}
+              </span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

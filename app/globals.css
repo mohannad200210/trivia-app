@@ -18,9 +18,11 @@
 
 @layer base {
   :root {
-    /* Design tokens — brand palette */
-    --color-brand-primary: 258 90% 66%;   /* violet */
-    --color-brand-accent:  39 100% 57%;   /* amber  */
+    /* Design tokens — brand palette (DESIGN.md §Color palette) */
+    --gradient-from: #FB6B2C;  /* warm orange */
+    --gradient-to:   #C61E45;  /* deep crimson */
+    --surface-card:  #FFFFFF;  /* question cards, team setup cards */
+    --surface-card-muted: #FFF4ED; /* subtle cream for secondary panels */
   }
 
   * {

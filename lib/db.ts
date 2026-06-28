@@ -10,6 +10,7 @@
  */
 
 import { supabase } from '@/lib/supabase'
+import type { HelpersUsed } from '@/lib/types'
 
 // ── Game lifecycle ─────────────────────────────────────────────────────────────
 
@@ -116,5 +117,21 @@ export function recordGameQuestion(
     })
     .then(({ error }) => {
       if (error) console.error('recordGameQuestion failed:', error.message)
+    })
+}
+
+// ── Helpers (SKILL.md §11) ───────────────────────────────────────────────────
+
+/**
+ * Persist a team's helpers_used state to Supabase.
+ * Fire-and-forget — log errors, never throw.
+ */
+export function updateTeamHelpers(teamId: string, helpersUsed: HelpersUsed): void {
+  supabase
+    .from('teams')
+    .update({ helpers_used: helpersUsed })
+    .eq('id', teamId)
+    .then(({ error }) => {
+      if (error) console.error('updateTeamHelpers failed:', error.message)
     })
 }

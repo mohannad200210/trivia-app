@@ -1,12 +1,17 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import QuestionCard from '@/components/game/QuestionCard'
 import ScoreStrip, { type ActiveTeam } from '@/components/game/ScoreStrip'
-import { selectQuestions } from '@/lib/questions'           // ← real Supabase query
-import { recordGameQuestion, updateTeamScore, finishGame } from '@/lib/db'
-import type { Question } from '@/lib/types'
+import { selectQuestions } from '@/lib/questions'
+import { recordGameQuestion, updateTeamScore, updateTeamHelpers, finishGame } from '@/lib/db'
+import {
+  DEFAULT_HELPERS,
+  useHelper,
+  getHiddenChoiceIds,
+} from '@/lib/game-logic'
+import type { Question, HelpersUsed, HelperType } from '@/lib/types'
 
 const QUESTIONS_PER_GAME = 10
 
@@ -67,19 +72,49 @@ function PlayContent() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [scores, setScores] = useState<number[]>(() => teamParams.map(() => 0))
 
-  const teams: ActiveTeam[] = teamParams.map((t, i) => ({
-    name: t.name,
-    color: t.color,
-    score: scores[i],
-  }))
+  // ── Helper state (SKILL.md §11) ────────────────────────────────────────────
+  const [teamHelpers, setTeamHelpers] = useState<HelpersUsed[]>(
+    () => teamParams.map(() => ({ ...DEFAULT_HELPERS }))
+  )
+  const [selectedTeamIndex, setSelectedTeamIndex] = useState<number | null>(null)
+  const [activeHelpers, setActiveHelpers] = useState<HelpersUsed>({ ...DEFAULT_HELPERS })
+
+  // Track previous question index to clear active helpers on question change
+  const prevQuestionIndexRef = useRef(currentIndex)
+
+  // Clear active helpers when advancing to a new question
+  useEffect(() => {
+    if (currentIndex !== prevQuestionIndexRef.current) {
+      prevQuestionIndexRef.current = currentIndex
+      setActiveHelpers({ ...DEFAULT_HELPERS })
+      setSelectedTeamIndex(null)
+    }
+  }, [currentIndex])
 
   const currentQuestion = questions[currentIndex]
   const isLastQuestion = currentIndex >= questions.length - 1
 
+  // Compute hidden choice IDs for remove_two helper
+  const hiddenChoiceIds = useMemo(() => {
+    if (!currentQuestion || !activeHelpers.remove_two) return []
+    return getHiddenChoiceIds(
+      currentQuestion.choices,
+      currentQuestion.correct_choice_id,
+      true
+    )
+  }, [currentQuestion, activeHelpers.remove_two])
+
+  // ── Teams for ScoreStrip ────────────────────────────────────────────────────
+  const teams: ActiveTeam[] = teamParams.map((t, i) => ({
+    name: t.name,
+    color: t.color,
+    score: scores[i],
+    helpers: teamHelpers[i],
+  }))
+
   // ── Navigation to results ───────────────────────────────────────────────────
   const goToResults = useCallback(
     (finalScores: number[]) => {
-      // finishGame is fire-and-forget — doesn't block navigation
       if (gameId) finishGame(gameId)
 
       const finalTeams = teamParams.map((t, i) => ({
@@ -105,13 +140,108 @@ function PlayContent() {
     [isLastQuestion, goToResults]
   )
 
+  // ── Team selection ──────────────────────────────────────────────────────────
+  const handleSelectTeam = useCallback(
+    (teamIndex: number) => {
+      // If tapping the already-selected team with no active helpers, award directly
+      if (selectedTeamIndex === teamIndex && activeHelpers === DEFAULT_HELPERS) {
+        // Award directly (same as before helpers were added)
+        const next = scores.map((s, i) => (i === teamIndex ? s + 1 : s))
+        setScores(next)
+
+        if (gameId && currentQuestion) {
+          recordGameQuestion(gameId, currentQuestion.id, currentIndex, teamParams[teamIndex].id)
+          updateTeamScore(teamParams[teamIndex].id, next[teamIndex])
+        }
+
+        advance(next)
+        return
+      }
+
+      // Otherwise, select the team (helpers can now be activated before answering)
+      setSelectedTeamIndex(teamIndex)
+    },
+    [selectedTeamIndex, activeHelpers, scores, advance, gameId, currentQuestion, currentIndex, teamParams]
+  )
+
+  // ── Helper activation ───────────────────────────────────────────────────────
+  const handleUseHelper = useCallback(
+    (helperType: HelperType) => {
+      if (selectedTeamIndex === null) return
+
+      // Skip helper: advances immediately with no point
+      if (helperType === 'skip') {
+        const newHelpers = useHelper(teamHelpers[selectedTeamIndex], 'skip')
+        const updated = [...teamHelpers]
+        updated[selectedTeamIndex] = newHelpers
+        setTeamHelpers(updated)
+
+        // Persist to DB
+        if (gameId && teamParams[selectedTeamIndex]) {
+          updateTeamHelpers(teamParams[selectedTeamIndex].id, newHelpers)
+        }
+
+        // Record unanswered question and advance
+        if (gameId && currentQuestion) {
+          recordGameQuestion(gameId, currentQuestion.id, currentIndex, null)
+        }
+        advance(scores)
+        return
+      }
+
+      // remove_two or double_points: mark as used for this team, activate for current question
+      const newHelpers = useHelper(teamHelpers[selectedTeamIndex], helperType)
+      const updated = [...teamHelpers]
+      updated[selectedTeamIndex] = newHelpers
+      setTeamHelpers(updated)
+
+      // Persist to DB
+      if (gameId && teamParams[selectedTeamIndex]) {
+        updateTeamHelpers(teamParams[selectedTeamIndex].id, newHelpers)
+      }
+
+      // Activate the helper effect for this question
+      setActiveHelpers((prev) => ({ ...prev, [helperType]: true }))
+    },
+    [selectedTeamIndex, teamHelpers, advance, scores, gameId, currentQuestion, currentIndex, teamParams]
+  )
+
   // ── Award point to a team ───────────────────────────────────────────────────
   const handleAward = useCallback(
     (teamIndex: number) => {
+      // If a different team was selected for helpers, switch selection
+      if (selectedTeamIndex !== teamIndex && selectedTeamIndex !== null) {
+        setSelectedTeamIndex(teamIndex)
+        return
+      }
+
+      // If team is selected and helpers are pending, use them
+      const hasActiveHelpers =
+        activeHelpers.remove_two || activeHelpers.double_points
+
+      if (selectedTeamIndex === teamIndex && hasActiveHelpers) {
+        const bonus = activeHelpers.double_points ? 2 : 1
+        const next = scores.map((s, i) => (i === teamIndex ? s + bonus : s))
+        setScores(next)
+
+        if (gameId && currentQuestion) {
+          recordGameQuestion(
+            gameId,
+            currentQuestion.id,
+            currentIndex,
+            teamParams[teamIndex].id
+          )
+          updateTeamScore(teamParams[teamIndex].id, next[teamIndex])
+        }
+
+        advance(next)
+        return
+      }
+
+      // No helpers active — standard +1 award
       const next = scores.map((s, i) => (i === teamIndex ? s + 1 : s))
       setScores(next)
 
-      // Fire-and-forget DB writes — never block the game flow
       if (gameId && currentQuestion) {
         recordGameQuestion(
           gameId,
@@ -124,12 +254,20 @@ function PlayContent() {
 
       advance(next)
     },
-    [scores, advance, gameId, currentQuestion, currentIndex, teamParams]
+    [
+      scores,
+      advance,
+      gameId,
+      currentQuestion,
+      currentIndex,
+      teamParams,
+      selectedTeamIndex,
+      activeHelpers,
+    ]
   )
 
   // ── Skip (no team answered) ─────────────────────────────────────────────────
   const handleSkip = useCallback(() => {
-    // Record the unanswered question (answered_by_team_id = null)
     if (gameId && currentQuestion) {
       recordGameQuestion(gameId, currentQuestion.id, currentIndex, null)
     }
@@ -210,16 +348,19 @@ function PlayContent() {
           question={currentQuestion}
           questionNumber={currentIndex + 1}
           totalQuestions={questions.length}
+          hiddenChoiceIds={hiddenChoiceIds}
         />
       </section>
 
-      {/* Score strip */}
+      {/* Score strip + helpers */}
       <footer className="relative z-10 sticky bottom-0 bg-black/30 backdrop-blur-md border-t border-white/20 px-4 sm:px-8 py-5">
         <div className="max-w-4xl mx-auto">
           <ScoreStrip
             teams={teams}
-            onAward={handleAward}
+            selectedTeamIndex={selectedTeamIndex}
+            onSelectTeam={handleSelectTeam}
             onSkip={handleSkip}
+            onUseHelper={handleUseHelper}
           />
         </div>
       </footer>

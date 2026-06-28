@@ -51,6 +51,7 @@ export interface Team {
   name: string
   color: string
   score: number
+  helpers_used: HelpersUsed
 }
 
 export interface GameQuestion {
@@ -60,6 +61,16 @@ export interface GameQuestion {
   order_index: number
   answered_by_team_id: string | null
 }
+
+// ─── Helper tools (SKILL.md §11) ────────────────────────────────────────────
+
+export interface HelpersUsed {
+  remove_two: boolean
+  double_points: boolean
+  skip: boolean
+}
+
+export type HelperType = keyof HelpersUsed
 
 // ─── UI / client-side types ────────────────────────────────────────────────
 
