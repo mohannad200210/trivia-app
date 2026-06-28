@@ -103,7 +103,8 @@ teams (
   game_id uuid references games(id),
   name text not null,
   color text not null,
-  score int default 0
+  score int default 0,
+  helpers_used jsonb not null default '{"remove_two": false, "double_points": false, "skip": false}'
 );
 
 game_questions (

@@ -102,3 +102,63 @@ Tile/button transitions: duration-150, ease-out
 Score award pulse:       scale up 1.1 then back to 1, duration-300
 Page transitions:        none needed for MVP (keep simple)
 ```
+
+# DESIGN.md ADDENDUM — Gameplay (Dark) Theme
+
+(Append this as a new section to your existing DESIGN.md. Keep the
+existing gradient/color tokens — those still apply to the LIGHT marketing
+theme: `/` and `/create-game`. This section defines the separate DARK
+theme used on `/board`, `/question`, `/answer`, `/results`.)
+
+## Gameplay (dark) theme
+
+Per the reference screenshots, gameplay screens use a dark UI, not the
+warm gradient — distinct visual mode for "we're playing now" vs.
+"we're setting up / browsing."
+
+```
+--game-bg:           #1A1A1E   /* near-black background */
+--game-surface:      #2A2A30   /* cell backgrounds, panels */
+--game-accent:       #FF7A1A   /* orange — primary buttons, turn pill */
+--game-accent-muted: #4A4A52   /* disabled/used cell background */
+--game-text:         #FFFFFF
+--game-text-muted:   #9A9AA2   /* secondary labels */
+```
+
+### Board cells (`/board`)
+
+- Unanswered cell: `bg-[--game-surface]` with point value in large bold
+  white text, `rounded-2xl`.
+- Used/answered cell: `bg-[--game-accent-muted]`, lowered opacity
+  (`opacity-40`), not clickable, point value still visible but dimmed.
+- Category header pill (top of each column): `bg-[--game-accent]
+  rounded-full px-4 py-1 text-sm font-bold text-white` — matches the
+  amber pill style in the reference screenshots.
+
+### Turn indicator
+
+Active team's name shown in a solid `bg-[--game-accent] rounded-full`
+pill in the top bar. Inactive team shown muted/outlined, not filled.
+
+### Question / Answer screens
+
+- Question text: `text-3xl sm:text-4xl font-bold text-white` on the dark
+  background — still legible from across a room (projector rule still
+  applies, just inverted to light-text-on-dark instead of dark-text-on-
+  white-card).
+- Timer: large monospace-style numerals, `text-2xl font-bold`, with
+  simple pause/reset icon buttons — no need for fancy animation.
+- "الإجابة" reveal button: `bg-green-600 rounded-full` chunky button
+  (reuse the chunky offset-shadow style from the light theme's button
+  spec, just in green for this one b/c it's a positive/confirm action).
+- Answer screen team-award buttons: large, one per team, in that team's
+  assigned color, `rounded-2xl`, full-width on mobile.
+
+### Top bar (all gameplay screens)
+
+Dark `bg-[--game-bg]` bar with: exit button (start), back-to-board
+button, end-game button, turn indicator (end), all in a single row —
+matches reference layout. Keep these icon+label combos simple; exact
+icon choice is up to you, just keep it minimal (don't need the "VAR"
+icon or extra decorative elements from the reference — that's their
+specific flourish, skip it).
