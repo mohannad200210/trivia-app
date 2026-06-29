@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Tajawal } from 'next/font/google'
 import './globals.css'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 /**
  * Arabic primary font — Tajawal.
@@ -21,18 +22,16 @@ export const metadata: Metadata = {
   description: 'لعبة معلومات عامة للمجموعات — العائلة والأصدقاء والديوانية',
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     // lang="ar" dir="rtl" set at root per SKILL.md §6.
     // Never hardcode ltr anywhere in component styles.
     // If an English toggle is added later, swap lang/dir via context — not here.
     <html lang="ar" dir="rtl" className={tajawal.variable}>
       <body className="font-sans antialiased bg-gray-950 text-white min-h-screen">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )

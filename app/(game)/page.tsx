@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { NavBar } from '@/components/NavBar'
 
 // ── DESIGN.md: category tile colors (exact, sort_order 1-8) ─────────────────
 // Used for the non-selectable teaser grid only (marketing preview).
@@ -26,6 +27,8 @@ export default function LandingPage() {
   return (
     // DESIGN.md: Primary gradient as page background — 135deg warm orange → deep crimson
     <main className="min-h-screen flex flex-col bg-gradient-to-br from-[#FB6B2C] to-[#C61E45]">
+
+      <NavBar />
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SECTION 1 — HERO

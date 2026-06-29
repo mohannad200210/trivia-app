@@ -42,6 +42,17 @@ function fallbackUuid(): string {
 }
 
 /**
+ * Resolve the host's identity for the create_board_game RPC.
+ * Prefers the authenticated Supabase user id (real per-user tracking).
+ * Falls back to a localStorage random UUID for the unauthenticated edge case.
+ */
+async function resolveHostSessionId(): Promise<string> {
+  const { data } = await supabase.auth.getSession()
+  if (data.session?.user?.id) return data.session.user.id
+  return getOrCreateHostSessionId()
+}
+
+/**
  * Default team colors. Per SKILL.md §5, /create-game can offer a color
  * picker "if it still applies" — keeping it simple with fixed defaults
  * for now (the first two choice-tile colors from DESIGN.md, which are
@@ -66,7 +77,7 @@ export async function createBoardGame(
   params: Omit<CreateBoardGameParams, 'hostSessionId' | 'team1Color' | 'team2Color'> &
     Partial<Pick<CreateBoardGameParams, 'team1Color' | 'team2Color'>>
 ): Promise<CreateGameResult> {
-  const hostSessionId = getOrCreateHostSessionId()
+  const hostSessionId = await resolveHostSessionId()
 
   const { data, error } = await supabase.rpc('create_board_game', {
     p_host_session_id: hostSessionId,

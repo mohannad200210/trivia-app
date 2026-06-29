@@ -6,6 +6,8 @@ import { fetchGroupedCategories } from '@/lib/categories'
 import { createBoardGame, DEFAULT_TEAM_COLORS } from '@/lib/create-game'
 import { SuperCategoryRow } from '@/components/game/SuperCategoryRow'
 import { InfoModal } from '@/components/game/InfoModal'
+import { NavBar } from '@/components/NavBar'
+import { useAuth } from '@/contexts/AuthContext'
 import type { SuperCategoryWithSubs, CategoryExtended } from '@/lib/types'
 
 /**
@@ -18,6 +20,7 @@ const REQUIRED_PICKS = 6
 
 export default function CreateGamePage() {
   const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   const [groups, setGroups] = useState<SuperCategoryWithSubs[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -27,6 +30,21 @@ export default function CreateGamePage() {
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const counterRef = useRef<HTMLDivElement>(null)
+
+  // Client-side auth guard
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/login?next=/create-game')
+    }
+  }, [authLoading, user, router])
+
+  if (authLoading || !user) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-[#FB6B2C] to-[#C61E45] flex items-center justify-center">
+        <p className="text-white text-xl font-bold">جاري التحقق…</p>
+      </main>
+    )
+  }
 
   useEffect(() => {
     fetchGroupedCategories()
@@ -72,6 +90,7 @@ export default function CreateGamePage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#FB6B2C] to-[#C61E45] px-4 sm:px-8 py-6">
+      <NavBar />
       <div className="max-w-4xl mx-auto space-y-8">
 
         {/* ── Page title ──────────────────────────────────────────────────── */}
