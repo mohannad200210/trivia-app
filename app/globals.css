@@ -46,3 +46,8 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* Hide scrollbar in quiz card rows (Webkit) */
+.quiz-card-row::-webkit-scrollbar {
+  display: none;
+}

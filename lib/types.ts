@@ -25,6 +25,30 @@ export interface Category {
   sort_order: number
 }
 
+/** A super-category that groups multiple quiz sub-categories. */
+export interface SuperCategory {
+  id: string
+  name_ar: string
+  icon_emoji: string | null
+  icon_url: string | null
+  sort_order: number
+}
+
+/** Extended category row with super-category grouping and display metadata. */
+export interface CategoryExtended extends Category {
+  super_category_id: string | null
+  cover_image_url: string | null
+  remaining_games: number | null
+  star_rating: number | null    // 1–3
+  has_questions: boolean
+}
+
+/** A super-category with all its sub-categories pre-joined. */
+export interface SuperCategoryWithSubs {
+  superCategory: SuperCategory
+  subcategories: CategoryExtended[]
+}
+
 export interface Question {
   id: string
   category_id: string

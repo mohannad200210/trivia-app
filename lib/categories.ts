@@ -9,7 +9,7 @@
  */
 
 import { supabase } from './supabase'
-import type { Category } from './types'
+import type { Category, SuperCategory, CategoryExtended, SuperCategoryWithSubs } from './types'
 
 export interface LocalCategory {
   /** Stable slug — NOT a UUID. Used as a React key and to look up visual meta. */
@@ -64,4 +64,79 @@ export async function fetchCategories(): Promise<CategoryWithMeta[]> {
       color: meta?.color ?? '#4A4A52',
     }
   })
+}
+
+/**
+ * Fetch all super-categories and their sub-categories in one round-trip.
+ * Returns them sorted by super_category.sort_order, with subcategories
+ * sorted by categories.sort_order within each group.
+ *
+ * Used exclusively by /create-game. Does not affect board/game pages.
+ *
+ * Graceful fallback: returns [] on any error (DB unreachable, missing
+ * tables, etc.) so the page renders an empty state instead of crashing.
+ */
+export async function fetchGroupedCategories(): Promise<SuperCategoryWithSubs[]> {
+  try {
+    // 1. Fetch super-categories
+    const { data: supers, error: supErr } = await supabase
+      .from('super_categories')
+      .select('id, name_ar, icon_emoji, icon_url, sort_order')
+      .order('sort_order', { ascending: true })
+
+    if (supErr) throw new Error(`fetchGroupedCategories (supers) failed: ${supErr.message}`)
+
+    // 2. Fetch all sub-categories (new columns included)
+    const { data: cats, error: catErr } = await supabase
+      .from('categories')
+      .select('id, name_ar, name_en, icon_url, sort_order, super_category_id, cover_image_url, remaining_games, star_rating')
+      .order('sort_order', { ascending: true })
+
+    if (catErr) throw new Error(`fetchGroupedCategories (cats) failed: ${catErr.message}`)
+
+    // 3. Determine which category IDs are "playable" (have >=2 active questions
+    //    for EACH of 200, 400, 600 — required by create_board_game RPC).
+    const { data: qCounts } = await supabase
+      .from('questions')
+      .select('category_id, point_value')
+      .eq('is_active', true)
+
+    const countMap = new Map<string, Map<number, number>>()
+    for (const q of qCounts ?? []) {
+      if (!countMap.has(q.category_id)) countMap.set(q.category_id, new Map())
+      const pv = countMap.get(q.category_id)!
+      pv.set(q.point_value, (pv.get(q.point_value) ?? 0) + 1)
+    }
+    const playableIds = new Set<string>()
+    Array.from(countMap.entries()).forEach(([catId, pvMap]) => {
+      if (
+        (pvMap.get(200) ?? 0) >= 2 &&
+        (pvMap.get(400) ?? 0) >= 2 &&
+        (pvMap.get(600) ?? 0) >= 2
+      ) {
+        playableIds.add(catId)
+      }
+    })
+
+    // 4. Group sub-categories under their super-category, decorating with has_questions
+    const superMap = new Map<string, CategoryExtended[]>()
+    for (const cat of cats ?? []) {
+      if (!cat.super_category_id) continue
+      if (!superMap.has(cat.super_category_id)) {
+        superMap.set(cat.super_category_id, [])
+      }
+      superMap.get(cat.super_category_id)!.push({
+        ...(cat as CategoryExtended),
+        has_questions: playableIds.has(cat.id),
+      })
+    }
+
+    return (supers ?? []).map((s) => ({
+      superCategory: s as SuperCategory,
+      subcategories: superMap.get(s.id) ?? [],
+    }))
+  } catch (err) {
+    console.error('fetchGroupedCategories failed:', err)
+    return []
+  }
 }
