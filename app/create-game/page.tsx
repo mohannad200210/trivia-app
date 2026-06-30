@@ -7,20 +7,21 @@ import { createBoardGame, DEFAULT_TEAM_COLORS } from '@/lib/create-game'
 import { SuperCategoryRow } from '@/components/game/SuperCategoryRow'
 import { InfoModal } from '@/components/game/InfoModal'
 import { NavBar } from '@/components/NavBar'
-import { useAuth } from '@/contexts/AuthContext'
 import type { SuperCategoryWithSubs, CategoryExtended } from '@/lib/types'
 
 /**
  * /create-game — Browse categorized quiz library, pick 6, name 2 teams, start.
  * SKILL.md §5 — marketing (light/warm gradient) theme.
  * Redesigned from flat grid to two-level super-category > sub-category browser.
+ *
+ * Anonymous hosts allowed — no auth check here. host_session_id is generated
+ * client-side (see lib/create-game.ts) and used as the game's host id.
  */
 
 const REQUIRED_PICKS = 6
 
 export default function CreateGamePage() {
   const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
   const [groups, setGroups] = useState<SuperCategoryWithSubs[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -30,21 +31,6 @@ export default function CreateGamePage() {
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const counterRef = useRef<HTMLDivElement>(null)
-
-  // Client-side auth guard
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace('/login?next=/create-game')
-    }
-  }, [authLoading, user, router])
-
-  if (authLoading || !user) {
-    return (
-      <main className="min-h-screen bg-gradient-to-br from-[#FB6B2C] to-[#C61E45] flex items-center justify-center">
-        <p className="text-white text-xl font-bold">جاري التحقق…</p>
-      </main>
-    )
-  }
 
   useEffect(() => {
     fetchGroupedCategories()

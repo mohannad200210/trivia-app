@@ -29,7 +29,11 @@ export function QuizCard({ category, isSelected, isDisabled, onSelect, onInfo }:
       className="relative flex-shrink-0 w-[120px] select-none"
       style={{ height: '160px' }}
     >
-      {/* Main card button */}
+      {/* Main card button — outer button. The info button used to be nested
+          inside it, which produced a `<button>` inside `<button>` and a
+          React hydration warning. The info control now lives as a sibling
+          absolutely-positioned over the card, with `pointer-events-auto`
+          so its click still works. */}
       <button
         type="button"
         onClick={() => !effectivelyDisabled && onSelect(category.id)}
@@ -74,16 +78,6 @@ export function QuizCard({ category, isSelected, isDisabled, onSelect, onInfo }:
             </span>
           )}
 
-          {/* Info button — top-end corner, inside the image wrapper */}
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onInfo(category) }}
-            className="absolute top-1 end-1 w-6 h-6 rounded-full bg-white/80 text-[#1B4965] text-[11px] font-extrabold flex items-center justify-center shadow hover:bg-white transition-colors z-10 backdrop-blur-sm"
-            aria-label={`معلومات عن ${category.name_ar}`}
-          >
-            ℹ
-          </button>
-
           {/* "قريباً" overlay — only when category has no playable questions */}
           {isComingSoon && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-t-2xl z-10">
@@ -118,10 +112,25 @@ export function QuizCard({ category, isSelected, isDisabled, onSelect, onInfo }:
         </div>
       </button>
 
+      {/* Info button — sibling of the main card button (no longer nested),
+          absolutely positioned over the card's top-end corner. Hidden when
+          the card is already selected so the ✓ checkmark below takes its
+          place. */}
+      {!isSelected && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onInfo(category) }}
+          className="absolute top-1 end-1 w-6 h-6 rounded-full bg-white/80 text-[#1B4965] text-[11px] font-extrabold flex items-center justify-center shadow hover:bg-white transition-colors z-20 backdrop-blur-sm"
+          aria-label={`معلومات عن ${category.name_ar}`}
+        >
+          ℹ
+        </button>
+      )}
+
       {/* Selected checkmark overlay */}
       {isSelected && (
         <span
-          className="absolute top-1.5 end-1.5 w-6 h-6 rounded-full bg-white text-[#C61E45] font-extrabold text-sm flex items-center justify-center shadow-md z-10"
+          className="absolute top-1.5 end-1.5 w-6 h-6 rounded-full bg-white text-[#C61E45] font-extrabold text-sm flex items-center justify-center shadow-md z-10 pointer-events-none"
           aria-hidden="true"
         >
           ✓
